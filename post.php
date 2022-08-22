@@ -2,6 +2,8 @@
 <?php
   include 'lib/secure.php';
   include 'lib/connect.php';
+  include 'lib/queryArticle.php';
+  include 'lib/article.php';
 
   $title = "";        // タイトル
   $body = "";         // 本文
@@ -12,10 +14,12 @@
     // titleとbodyがPOSTメソッドで送信されたとき
     $title = $_POST['title'];
     $body = $_POST['body'];
-    $db = new connect();
-    $sql = "INSERT INTO articles (title, body, created_at, updated_at)
-            VALUES (:title, :body, NOW(), NOW())";
-    $result = $db->query($sql, array(':title' => $title, ':body' => $body));
+    
+    $article = new Article();
+    $article->setTitle($title);
+    $article->setBody($body);
+    $article->save();
+    
     header('Location: backend.php');
   } else if(!empty($_POST)){
     // POSTメソッドで送信されたが、titleかbodyが足りないとき
