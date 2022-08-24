@@ -3,8 +3,14 @@ include 'lib/connect.php';
 include 'lib/queryArticle.php';
 include 'lib/article.php';
 
-$queryArticle = new QueryArticle();
-$articles = $queryArticle->findAll();
+if (!empty($_GET['id'])) {
+  $id = intval($_GET['id']);
+
+  $queryArticle = new QueryArticle();
+  $article = $queryArticle->find($id);
+} else {
+  $article = null;
+}
 ?>
 
 <!doctype html>
@@ -53,18 +59,19 @@ $articles = $queryArticle->findAll();
   <main class="container">
     <div class="row">
       <div class="col-md-8">
-        <?php if ($articles) : ?>
-          <?php foreach ($articles as $article) : ?>
-            <article class="blog-post">
-              <h2 class="blog-post-title">
-                <a href="view.php?id=<?php echo $article->getId() ?>">
-                  <?php echo $article->getTitle() ?>
+        <?php if ($article) : ?>
+          <article class="blog-post">
+            <h2 class="blog-post-title"><?php echo $article->getTitle() ?></h2>
+            <p class="blog-post-meta"><?php echo $article->getCreatedAt() ?></p>
+            <?php echo nl2br($article->getBody()) ?>
+            <?php if ($article->getFilename()) : ?>
+              <div>
+                <a href="./album/<?php echo $article->getFilename() ?>" target="_blank">
+                  <img src="./album/thumbs-<?php echo $article->getFilename() ?>" class="img-fluid">
                 </a>
-              </h2>
-              <p class="blog-post-meta"><?php echo $article->getCreatedAt() ?></p>
-              <?php echo nl2br($article->getBody()) ?>
-            </article>
-          <?php endforeach ?>
+              </div>
+            <?php endif ?>
+          </article>
         <?php else : ?>
           <div class="alert alert-success">
             <p>記事はありません。</p>
