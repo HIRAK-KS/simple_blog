@@ -68,6 +68,7 @@ $articles = $queryArticle->findAll();
                 <th>作成日</th>
                 <th>更新日</th>
                 <th>編集</th>
+                <th>削除</th>
               </tr>
             </thead>
             <tbody>
@@ -77,10 +78,10 @@ $articles = $queryArticle->findAll();
                   <td><?php echo $article->getTitle() ?></td>
                   <td><?php echo $article->getBody() ?></td>
                   <td><?php echo $article->getFilename()? '<img src="./album/thumbs-'.$article->getFilename().'">': 'なし' ?></td>
-
                   <td><?php echo $article->getCreatedAt() ?></td>
                   <td><?php echo $article->getUpdatedAt() ?></td>
                   <td><a href="edit.php?id=<?php echo $article->getId() ?>" class="btn btn-success">編集</a></td>
+                  <td><a href="delete.php?id=<?php echo $article->getId() ?>" class="btn btn-danger">削除</a></td>
                 </tr>
               <?php endforeach ?>
             </tbody>
