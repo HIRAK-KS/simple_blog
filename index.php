@@ -5,14 +5,23 @@ include 'lib/article.php';
 
 $limit = 5;
 $page = 1;
+$month = null;
+$title = "";
 
 // ページ数の決定
 if (!empty($_GET['page']) && intval($_GET['page']) > 0) {
   $page = intval($_GET['page']);
 }
 
+// 月指定
+if (!empty($_GET['month'])) {
+  $month = $_GET['month'];
+  $title = $month . 'の投稿一覧';
+}
+
 $queryArticle = new QueryArticle();
-$pager = $queryArticle->getPager($page, $limit);
+$pager = $queryArticle->getPager($page, $limit, $month);
+$monthly = $queryArticle->getMonthlyArchiveMenu();
 ?>
 
 <!doctype html>
@@ -61,6 +70,10 @@ $pager = $queryArticle->getPager($page, $limit);
   <main class="container">
     <div class="row">
       <div class="col-md-8">
+        <?php if (!empty($title)) : ?>
+          <h2><?php echo $title ?></h2>
+        <?php endif ?>
+
         <?php if ($pager['articles']) : ?>
           <?php foreach ($pager['articles'] as $article) : ?>
             <article class="blog-post">
@@ -83,7 +96,7 @@ $pager = $queryArticle->getPager($page, $limit);
           <nav aria-label="Page navigation example">
             <ul class="pagination">
               <?php for ($i = 1; $i <= ceil($pager['total'] / $limit); $i++) : ?>
-                <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $i ?>"><?php echo $i ?></a></li>
+                <li class="page-item"><a class="page-link" href="index.php?page=<?php echo $i ?><?php echo $month ? '&month=' . $month : '' ?>"><?php echo $i ?></a></li>
               <?php endfor ?>
             </ul>
           </nav>
@@ -99,9 +112,9 @@ $pager = $queryArticle->getPager($page, $limit);
         <div class="p-4">
           <h4>アーカイブ</h4>
           <ol class="list-unstyled mb-0">
-            <li><a href="#">2021/06</a></li>
-            <li><a href="#">2021/05</a></li>
-            <li><a href="#">2021/04</a></li>
+            <?php foreach ($monthly as $m) : ?>
+              <li><a href="index.php?month=<?php echo $m['month'] ?>"><?php echo $m['month'] ?> (<?php echo $m['count'] ?>)</a></li>
+            <?php endforeach ?>
           </ol>
         </div>
 
