@@ -4,13 +4,25 @@ include('lib/connect.php');
 include('lib/queryCategory.php');
 
 $queryCategory = new QueryCategory();
+$formCategory = null; // 編集するカテゴリ情報
 
 if (!empty($_POST['action']) && $_POST['action'] == 'add' && !empty($_POST['name'])) {
     $category = new Category();
     $category->setName($_POST['name']);
     $category->save();
+} else if (!empty($_GET['action']) && $_GET['action'] == 'edit' && !empty($_GET['id'])) {
+    // 編集モードのとき
+    $formCategory = $queryCategory->find($_GET['id']);
+} else if (!empty($_POST['action']) && $_POST['action'] == 'edit' && !empty($_POST['id']) && !empty($_POST['name'])) {
+    // 編集
+    $category = $queryCategory->find($_POST['id']);
+    if ($category) {
+        $category->setName($_POST['name']);
+        $category->save();
+    }
 }
 
+// 登録されているカテゴリーをすべて取得
 $categories = $queryCategory->findAll();
 
 ?>
@@ -62,7 +74,21 @@ $categories = $queryCategory->findAll();
             <div class="col-md-12">
 
                 <h1>カテゴリー</h1>
+                <?php if ($formCategory) : ?>
+                    <h2>編集</h2>
+                    <form action="category.php" method="post" class="row">
+                        <input type="hidden" name="action" value="edit">
+                        <input type="hidden" name="id" value="<?php echo $formCategory->getId() ?>">
+                        <div class="col-md-6">
+                            <input type="text" name="name" value="<?php echo $formCategory->getName() ?>" class="form-control">
+                        </div>
+                        <div class="col-md-6">
+                            <button type="submit" class="btn btn-primary">編集する</button>
+                        </div>
+                    </form>
 
+                    <hr>
+                <?php endif ?>
                 <h2>新規追加</h2>
                 <form action="category.php" method="post" class="row">
                     <input type="hidden" name="action" value="add">
@@ -80,6 +106,7 @@ $categories = $queryCategory->findAll();
                             <tr>
                                 <th>ID</th>
                                 <th>カテゴリー名</th>
+                                <th>編集</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -87,6 +114,7 @@ $categories = $queryCategory->findAll();
                                 <tr>
                                     <td><?php echo $c->getId() ?></td>
                                     <td><?php echo $c->getName() ?></td>
+                                    <td><a href="category.php?action=edit&id=<?php echo $c->getId() ?>" class="btn btn-success">編集</a></td>
                                 </tr>
                             <?php endforeach ?>
                         </tbody>

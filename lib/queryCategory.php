@@ -15,12 +15,35 @@ class QueryCategory extends connect
 
     public function save()
     {
+        $id = $this->category->getId();
         $name = $this->category->getName();
 
-        // 新規登録
-        $stmt = $this->dbh->prepare("INSERT INTO categories(name) VALUES (:name)");
-        $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        if ($this->category->getId()) {
+            // IDがあれば上書き保存
+            $stmt = $this->dbh->prepare("UPDATE categories SET name=:name WHERE id=:id");
+            $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+            $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        } else {
+            // IDがなければ新規作成
+            $stmt = $this->dbh->prepare("INSERT INTO categories(name) VALUES (:name)");
+            $stmt->bindParam(':name', $name, PDO::PARAM_STR);
+        }
         $stmt->execute();
+    }
+
+    public function find($id)
+    {
+        $stmt = $this->dbh->prepare("SELECT * FROM categories WHERE id=:id");
+        $stmt->bindParam(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($result) {
+            $category = new Category();
+            $category->setId($result['id']);
+            $category->setName($result['name']);
+            return $category;
+        }
+        return null;
     }
 
     public function findAll()
