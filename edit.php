@@ -4,12 +4,18 @@ include 'lib/secure.php';
 include 'lib/connect.php';
 include 'lib/queryArticle.php';
 include 'lib/article.php';
+include 'lib/queryCategory.php';
 
 $title = "";        // タイトル
 $body = "";         // 本文
 $id = "";           // ID
+$category_id = "";  // カテゴリーID
 $title_alert = "";  // タイトルのエラー文言
 $body_alert = "";   // 本文のエラー文言
+
+// カテゴリーの準備
+$queryCategory = new QueryCategory();
+$categories = $queryCategory->findAll();
 
 if (isset($_GET['id'])) {
   $queryArticle = new QueryArticle();
@@ -20,6 +26,7 @@ if (isset($_GET['id'])) {
     $id = $article->getId();
     $title = $article->getTitle();
     $body = $article->getBody();
+    $category_id = $article->getCategoryId();
   } else {
     // 編集する記事データが存在しないとき
     header('Location: backend.php');
@@ -36,8 +43,17 @@ if (isset($_GET['id'])) {
     // 記事データが存在していれば、タイトルと本文を変更して上書き保存
     $article->setTitle($title);
     $article->setBody($body);
-    if (isset($_FILES['image']) && is_uploaded_file($_FILES['image']['tmp_name'])){
+    // 画像がアップロードされていたとき
+    if (isset($_FILES['image']) && is_uploaded_file($_FILES['image']['tmp_name'])) {
       $article->setFile($_FILES['image']);
+    }
+    if (!empty($_POST['category'])) {
+      $category = $queryCategory->find($_POST['category']);
+      if ($category) {
+        $article->setCategoryId($category->getId());
+      }
+    } else {
+      $article->setCategoryId(null);
     }
     $article->save();
   }
@@ -128,6 +144,15 @@ if (isset($_GET['id'])) {
             <label class="form-label">本文</label>
             <?php echo !empty($body_alert) ? '<div class="alert alert-danger">' . $body_alert . '</div>' : '' ?>
             <textarea name="body" class="form-control" rows="10"><?php echo $body; ?></textarea>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">カテゴリー</label>
+            <select name="category" class="form-control">
+              <option value="0">なし</option>
+              <?php foreach ($categories as $c) : ?>
+                <option value="<?php echo $c->getId() ?>" <?php echo $category_id == $c->getId() ? 'selected="selected"' : '' ?>><?php echo $c->getName() ?></option>
+              <?php endforeach ?>
+            </select>
           </div>
           <?php if ($article->getFilename()) : ?>
             <div class="mb-3">

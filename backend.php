@@ -3,6 +3,7 @@ include 'lib/secure.php';
 include 'lib/connect.php';
 include 'lib/queryArticle.php';
 include 'lib/article.php';
+include 'lib/queryCategory.php';
 
 $limit = 10;
 $page = 1;
@@ -14,6 +15,8 @@ if (!empty($_GET['page']) && intval($_GET['page']) > 0) {
 
 $queryArticle = new QueryArticle();
 $pager = $queryArticle->getPager($page, $limit);
+$queryCategory = new QueryCategory();
+$categories = $queryCategory->findAll();
 ?>
 
 <!doctype html>
@@ -73,6 +76,7 @@ $pager = $queryArticle->getPager($page, $limit);
                 <th>タイトル</th>
                 <th>本文</th>
                 <th>画像</th>
+                <th>カテゴリー</th>
                 <th>作成日</th>
                 <th>更新日</th>
                 <th>編集</th>
@@ -86,6 +90,7 @@ $pager = $queryArticle->getPager($page, $limit);
                   <td><?php echo $article->getTitle() ?></td>
                   <td><?php echo $article->getBody() ?></td>
                   <td><?php echo $article->getFilename() ? '<img src="./album/thumbs-' . $article->getFilename() . '">' : 'なし' ?></td>
+                  <td><?php echo isset($categories[$article->getCategoryId()]) ? $categories[$article->getCategoryId()]->getName() : 'なし' ?></td>
                   <td><?php echo $article->getCreatedAt() ?></td>
                   <td><?php echo $article->getUpdatedAt() ?></td>
                   <td><a href="edit.php?id=<?php echo $article->getId() ?>" class="btn btn-success">編集</a></td>
