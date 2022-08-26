@@ -162,7 +162,7 @@ class QueryArticle extends connect
         return $articles;
     }
 
-    public function getPager($page = 1, $limit = 10, $month = null)
+    public function getPager($page = 1, $limit = 10, $month = null, $category_id = null)
     {
         $page = ($page - 1) * $limit;  // LIMIT x, y：開始ページ数は0から
         $pager = array('total' => null, 'articles' => null);
@@ -173,29 +173,36 @@ class QueryArticle extends connect
         }
 
         // 総記事数
+        // ベースSQL
+        $sql = "SELECT COUNT(*) FROM articles WHERE is_delete=0";
         if ($month) {
-            // 日付指定時
-            $stmt = $this->dbh->prepare("SELECT COUNT(*) FROM articles WHERE is_delete=0 AND created_at LIKE :month");
-            // その他のとき
+            $stmt = $this->dbh->prepare($sql . " AND created_at LIKE :month");
             $stmt->bindParam(':month', $month, PDO::PARAM_STR);
+        } else if ($category_id === 0) {
+            $stmt = $this->dbh->prepare($sql . " AND category_id IS NULL");
+        } else if ($category_id) {
+            $stmt = $this->dbh->prepare($sql . " AND category_id=:category_id");
+            $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
         } else {
-            $stmt = $this->dbh->prepare("SELECT COUNT(*) FROM articles WHERE is_delete=0");
+            $stmt = $this->dbh->prepare($sql);
         }
         $stmt->execute();
         $pager['total'] = $stmt->fetchColumn();
 
         // 表示するデータ
+        // ベースSQL
+        $sql = "SELECT * FROM articles WHERE is_delete=0 ";
+        $orderBy = "ORDER BY created_at DESC LIMIT :start, :limit";
         if ($month) {
-            $stmt = $this->dbh->prepare("SELECT * FROM articles
-            WHERE is_delete=0 AND created_at LIKE :month
-            ORDER BY created_at DESC
-            LIMIT :start, :limit");
+            $stmt = $this->dbh->prepare($sql . " AND created_at LIKE :month " . $orderBy);
             $stmt->bindParam(':month', $month, PDO::PARAM_STR);
+        } else if ($category_id === 0) {
+            $stmt = $this->dbh->prepare($sql . " AND category_id IS NULL " . $orderBy);
+        } else if ($category_id) {
+            $stmt = $this->dbh->prepare($sql . " AND category_id=:category_id " . $orderBy);
+            $stmt->bindParam(':category_id', $category_id, PDO::PARAM_INT);
         } else {
-            $stmt = $this->dbh->prepare("SELECT * FROM articles
-            WHERE is_delete=0
-            ORDER BY created_at DESC
-            LIMIT :start, :limit");
+            $stmt = $this->dbh->prepare($sql . $orderBy);
         }
         $stmt->bindParam(':start', $page, PDO::PARAM_INT);
         $stmt->bindParam(':limit', $limit, PDO::PARAM_INT);
